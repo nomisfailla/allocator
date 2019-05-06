@@ -2,7 +2,7 @@
 Simple allocator written in C.
 
 ## Dependencies
-None! The allocator is designed to be dropped into osdev projects and work as is, therefore it has no dependencies.
+The allocator is designed to be dropped into osdev projects as-is. However, it does require fixed width integer types. By default it includes `stdint.h`, but feel free to change that to wherever your types are defined.
 
 ## Build Instructions
 To build and run the example program, simply run;
