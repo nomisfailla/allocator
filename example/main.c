@@ -4,6 +4,9 @@
 
 int main(int argc, char** argv)
 {
-    printf("hello, world!\n");
+    const int size = 16;
+    char my_heap[size];
+    heap_init((uintptr_t)my_heap, size);
+
     return 0;
 }
