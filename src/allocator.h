@@ -30,6 +30,9 @@ typedef struct
 
 void heap_init(void* start, size_t size);
 
+heap_state_t get_heap_state();
+int count_blocks();
+
 void* my_malloc(size_t size);
 void my_free(void* ptr);
 

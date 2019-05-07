@@ -89,3 +89,23 @@ void my_free(void* ptr)
     state.used_total -= block->size + sizeof(alloc_header_t);
     state.used -= block->size;
 }
+
+int count_blocks()
+{
+    int blocks = 0;
+
+    void* current = heap_start;
+    while(current < heap_end)
+    {
+        alloc_header_t* block = (alloc_header_t*)current;
+        blocks++;
+        current += (block->size + sizeof(alloc_header_t));
+    }
+
+    return blocks;
+}
+
+heap_state_t get_heap_state()
+{
+    return state;
+}

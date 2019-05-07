@@ -4,54 +4,34 @@
 
 int main(int argc, char** argv)
 {
-    const int size = 1024;
+    const int size = 30 + (3 * sizeof(alloc_header_t));
     char my_heap[size];
     heap_init((void*)my_heap, size);
 
-    char* str1 = my_malloc(size - sizeof(alloc_header_t));
-    if(!str1)
-    {
-        printf("failed to allocate\n");
-    }
-    else
-    {
-        str1[0] = 'A';
-        str1[1] = 'B';
-        str1[2] = 'C';
-        str1[3] = '\0';
+    void* a = my_malloc(10);
+    void* b = my_malloc(10);
+    void* c = my_malloc(10);
 
-        printf("allocated str1 @ %p\n", str1);
-        printf("%s\n", str1);
-    }
+    my_free(a);
+    my_free(c);
+    // At this stage the heap should look like;
+    // AAAA|BBBB|CCCC
+    // where A and C are free blocks.
 
-    char* str2 = my_malloc(4);
-    if(!str2)
-    {
-        printf("failed to allocate\n");
-    }
-    else
-    {
-        str2[0] = 'D';
-        str2[1] = 'E';
-        str2[2] = 'F';
-        str2[3] = '\0';
+    my_free(b);
+    // Now we want the heap to look like;
+    // AAAAAAAAAAAAAA
+    // where A is one big free block, but instead we get;
+    // AAAA|BBBB|CCCC
+    // where A, B and C are free blocks, but we cannot allocate something
+    // that is bigger than any one of these individual blocks.
 
-        printf("allocated str2 @ %p\n", str2);
-        printf("%s | %s\n", str2, str1);
-    }
-
-    my_free(str1);
-    char* str3 = my_malloc(2);
-    if(!str3)
-    {
-        printf("failed to allocate\n");
-    }
-    else
-    {
-        str3[1] = '\0';
-        printf("allocated str3 @ %p\n", str3);
-        printf("%s\n", str3);
-    }
+    heap_state_t state = get_heap_state();
+    printf("used: %d\n", state.used);
+    printf("used_total: %d\n", state.used_total);
+    printf("active_allocations: %d\n", state.active_allocations);
+    printf("header_size: %ld\n", state.header_size);
+    printf("block_count: %d\n", count_blocks());
 
     FILE* ptr = fopen("heap.bin", "wb");
     fwrite(my_heap, size, 1, ptr);
