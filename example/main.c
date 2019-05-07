@@ -54,5 +54,9 @@ int main(int argc, char** argv)
         printf("%s\n", str2);
     }
 
+    FILE* ptr = fopen("heap.bin", "wb");
+    fwrite(my_heap, size, 1, ptr);
+    fclose(ptr);
+
     return 0;
 }

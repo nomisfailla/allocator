@@ -8,6 +8,21 @@
 
 typedef struct
 {
+    // Amount of data allocated.
+    uint32_t used;
+
+    // Amount of data allocated, including headers.
+    uint32_t used_total;
+
+    // Number of allocations which have not been freed.
+    uint32_t active_allocations;
+
+    // Size of the allocation header.
+    size_t header_size;
+} heap_state_t;
+
+typedef struct
+{
     uint32_t sig;
     uint8_t flags;
     size_t size;
