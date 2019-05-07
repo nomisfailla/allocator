@@ -62,6 +62,11 @@ void* my_malloc(size_t size)
                 // asked for by malloc, and the size of the block including
                 // dead bytes.
 
+                // Alternative, instead of having two sizes, keep the one size
+                // and just add the dead bytes to it, sure the user might get
+                // a few extra bytes, but they dont care? The size is used by
+                // the allocator only.
+
                 int lost_bytes = next_size;
                 char* no_mans_land = current + sizeof(alloc_header_t) + block->size;
                 for(int i = 0; i < lost_bytes; i++)
