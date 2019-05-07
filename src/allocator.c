@@ -28,6 +28,14 @@ void* my_malloc(size_t size)
     while(current < heap_end)
     {
         alloc_header_t* block = (alloc_header_t*)current;
+        if(block->sig != ALLOC_SIG)
+        {
+            // TODO: Narrow this case down to only occuring when we are
+            // out of heap space.
+            printf("something went very wrong! out of memory perhaps?\n");
+            return 0;
+        }
+
         if(block->flags == 0 && block->size >= size)
         {
             size_t old_size = block->size;
@@ -39,42 +47,15 @@ void* my_malloc(size_t size)
 
             if(next_size < sizeof(alloc_header_t))
             {
-                // If the size of the next block cannot hold another header,
-                // we should probably find somewhere else to put this current
-                // allocation, but for now, we will allow it.
-                // The problem with this is now we have ?some? amount of bytes
-                // which are not accounted for by the allocator, these bytes
-                // sit between the block currently being allocated and the
-                // block which was after it.
-                // Here I refer the dead space between allocation blocks as
-                // "no mans land", and fill it all with 0xDE to signify it
-                // as such.
-                // Okay so actually this needs to be fixed as soon as possible.
-                // Basically when we are iterating new blocks we jump over the
-                // size of them and when we have these dead bytes, it fucks
-                // with the whole system because the allocator expects to find
-                // another header at the end of the currentl allocation, but
-                // instead it finds dead bytes and interprets them as the
-                // header. We could check to see if the bytes at the proposed
-                // header location are dead bytes and increment till we find
-                // the header signature, but thats nasty and I have a better
-                // idea, store two sizes for the blob, the size which was
-                // asked for by malloc, and the size of the block including
-                // dead bytes.
-
-                // Alternative, instead of having two sizes, keep the one size
-                // and just add the dead bytes to it, sure the user might get
-                // a few extra bytes, but they dont care? The size is used by
-                // the allocator only.
-
+                // If we find that we cannot fit another header after this
+                // block, we will increase the size of the in-progress
+                // allocation to accommodate for the extra bytes that would
+                // otherwise be lost.
+                // This ensure that when we are iterating over the heap and
+                // encounter a new block, we increase the current pointer
+                // by the correct amount in order to find the next block.
                 int lost_bytes = next_size;
-                char* no_mans_land = current + sizeof(alloc_header_t) + block->size;
-                for(int i = 0; i < lost_bytes; i++)
-                {
-                    *(no_mans_land) = 0xDE;
-                }
-
-                printf("cant fit header (%d), ignoring...\n", lost_bytes);
+                block->size += lost_bytes;
             }
             else
             {
@@ -95,6 +76,7 @@ void* my_malloc(size_t size)
         }
     }
 
+    printf("out of heap space!\n");
     return 0;
 }
 
