@@ -4,15 +4,18 @@
 #include <stdint.h>
 #include <stdio.h> // For size_t
 
+#define ALLOC_SIG 0xA110CA1E
+
 typedef struct
 {
-    size_t size;
+    uint32_t sig;
     uint8_t flags;
+    size_t size;
 } alloc_header_t;
 
-void heap_init(uintptr_t start, size_t size);
+void heap_init(void* start, size_t size);
 
-void* malloc(size_t size);
-void free(void* ptr);
+void* my_malloc(size_t size);
+void my_free(void* ptr);
 
 #endif
