@@ -18,6 +18,7 @@ void heap_init(void* start, size_t size)
     alloc_header_t* first = (alloc_header_t*)heap_start;
     first->sig = ALLOC_SIG;
     first->flags = 0;
+    first->prev = 0;
     first->size = size - sizeof(alloc_header_t);
 }
 
@@ -62,6 +63,7 @@ void* my_malloc(size_t size)
                 alloc_header_t* next = (alloc_header_t*)(current + block->size + sizeof(alloc_header_t));
                 next->sig = ALLOC_SIG;
                 next->flags = 0;
+                next->prev = current;
                 next->size = next_size - sizeof(alloc_header_t);
             }
 
@@ -80,6 +82,24 @@ void* my_malloc(size_t size)
     return 0;
 }
 
+int heap_is_block_free(void* current)
+{
+    alloc_header_t* block = (alloc_header_t*)current;
+    if(block->sig != ALLOC_SIG)
+    {
+        return 0;
+    }
+
+    if(block->flags == 1)
+    {
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
 void my_free(void* ptr)
 {
     alloc_header_t* block = (alloc_header_t*)(ptr - sizeof(alloc_header_t));
@@ -88,6 +108,20 @@ void my_free(void* ptr)
     state.active_allocations--;
     state.used_total -= block->size + sizeof(alloc_header_t);
     state.used -= block->size;
+
+    // March fowards and eat all free blocks that come after this one.
+    void* current = ptr + block->size;
+    size_t extra_size = 0;
+    while(heap_is_block_free(current))
+    {
+        alloc_header_t* next = (alloc_header_t*)current;
+        size_t total_size = (next->size + sizeof(alloc_header_t));
+        extra_size += total_size;
+        current += total_size;
+    }
+
+    // Forfeit the empty blocks to this newly freed block.
+    block->size += extra_size;
 }
 
 int count_blocks()
@@ -98,6 +132,7 @@ int count_blocks()
     while(current < heap_end)
     {
         alloc_header_t* block = (alloc_header_t*)current;
+        printf("block @ %p, size: %ld\n", current, block->size);
         blocks++;
         current += (block->size + sizeof(alloc_header_t));
     }

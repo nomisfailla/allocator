@@ -23,8 +23,16 @@ typedef struct
 
 typedef struct
 {
+    // Expected to be ALLOC_SIG.
     uint32_t sig;
+
+    // Flags. Currently used for free/in use.
     uint8_t flags;
+
+    // Pointer to previous blocks header, or 0 if this block is the first.
+    void* prev;
+
+    // Size of this blocks data.
     size_t size;
 } alloc_header_t;
 
