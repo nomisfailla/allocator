@@ -13,12 +13,17 @@ int main(int argc, char** argv)
     void* c = my_malloc(10);
     void* d = my_malloc(10);
 
-    my_free(a);
+    heap_state_t state = get_heap_state();
+    printf("used: %d\n", state.used);
+    printf("used_total: %d\n", state.used_total);
+    printf("active_allocations: %d\n", state.active_allocations);
+    printf("header_size: %ld\n", state.header_size);
+    printf("block_count: %d\n", count_blocks());
+
     my_free(c);
-    my_free(d);
     my_free(b);
 
-    heap_state_t state = get_heap_state();
+    state = get_heap_state();
     printf("used: %d\n", state.used);
     printf("used_total: %d\n", state.used_total);
     printf("active_allocations: %d\n", state.active_allocations);

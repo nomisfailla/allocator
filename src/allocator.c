@@ -122,6 +122,16 @@ void my_free(void* ptr)
 
     // Forfeit the empty blocks to this newly freed block.
     block->size += extra_size;
+
+    // TODO: March backwards here.
+
+    // Make sure that the block after this one actually points to this block
+    // as it may not if we consumed some free blocks.
+    alloc_header_t* next = (alloc_header_t*)(ptr + block->size);
+    if(next->sig == ALLOC_SIG)
+    {
+        next->prev = ptr - sizeof(alloc_header_t);
+    }
 }
 
 int count_blocks()
@@ -132,7 +142,7 @@ int count_blocks()
     while(current < heap_end)
     {
         alloc_header_t* block = (alloc_header_t*)current;
-        printf("block @ %p, size: %ld\n", current, block->size);
+        printf("block @ %p, size: %ld : %s prev @ %p\n", current, block->size, block->flags == 0 ? "free" : "used", block->prev);
         blocks++;
         current += (block->size + sizeof(alloc_header_t));
     }
