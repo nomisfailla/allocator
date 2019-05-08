@@ -4,14 +4,11 @@
 
 int main(int argc, char** argv)
 {
-    const int size = 40 + (4 * sizeof(alloc_header_t));
+    const int size = 30 + (3 * sizeof(alloc_header_t));
     char my_heap[size];
     heap_init((void*)my_heap, size);
 
-    void* a = my_malloc(10);
-    void* b = my_malloc(10);
-    void* c = my_malloc(10);
-    void* d = my_malloc(10);
+    printf(" -==[ initial state ]==-\n");
 
     heap_state_t state = get_heap_state();
     printf("used: %d\n", state.used);
@@ -20,9 +17,15 @@ int main(int argc, char** argv)
     printf("header_size: %ld\n", state.header_size);
     printf("block_count: %d\n", count_blocks());
 
+    void* a = my_malloc(10);
+    void* b = my_malloc(10);
+    void* c = my_malloc(10);
+
+    my_free(a);
     my_free(c);
     my_free(b);
 
+    printf(" -==[ final state ]==-\n");
     state = get_heap_state();
     printf("used: %d\n", state.used);
     printf("used_total: %d\n", state.used_total);

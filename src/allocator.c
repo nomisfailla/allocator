@@ -13,7 +13,6 @@ void heap_init(void* start, size_t size)
     state.used_total = 0;
     state.active_allocations = 0;
     state.header_size = sizeof(alloc_header_t);
-    printf("sizeof(alloc_header_t) = %ld\n", sizeof(alloc_header_t));
 
     alloc_header_t* first = (alloc_header_t*)heap_start;
     first->sig = ALLOC_SIG;
@@ -84,7 +83,13 @@ void* my_malloc(size_t size)
 
 int heap_is_block_free(void* current)
 {
+    if(current < heap_start || current >= heap_end)
+    {
+        return 0;
+    }
+
     alloc_header_t* block = (alloc_header_t*)current;
+
     if(block->sig != ALLOC_SIG)
     {
         return 0;
@@ -92,7 +97,7 @@ int heap_is_block_free(void* current)
 
     if(block->flags == 1)
     {
-        return 0;
+       return 0;
     }
     else
     {
@@ -109,7 +114,7 @@ void my_free(void* ptr)
     state.used_total -= block->size + sizeof(alloc_header_t);
     state.used -= block->size;
 
-    // Check to see if the next block is free, if it is. Consume it.
+    // Check to see if the next block is free, if it is; consume it.
     alloc_header_t* next = (alloc_header_t*)(ptr + block->size);
     if(heap_is_block_free(next))
     {
@@ -121,16 +126,20 @@ void my_free(void* ptr)
         block->size += total_size;
     }
 
-    // TODO: March backwards here.
-
-    // Make sure that the block after this one actually points to this block
-    // as it may not if we consumed some free blocks.
-    next = (alloc_header_t*)(ptr + block->size);
-    if(next->sig == ALLOC_SIG)
+    // Check the block behind us.
+    alloc_header_t* prev = (alloc_header_t*)(block->prev);
+    if(heap_is_block_free(prev))
     {
-        next->prev = ptr - sizeof(alloc_header_t);
-    }
+        // The block before us is free, so we will invalidate the old block
+        // and update the new block.
+        block->sig = ALLOC_INV;
 
+        size_t total_size = (block->size + sizeof(alloc_header_t)) + (prev->size);
+        prev->size = total_size;
+
+        // Make sure to update the block in front of us.
+        next->prev = (void*)prev;
+    }
 }
 
 int count_blocks()
