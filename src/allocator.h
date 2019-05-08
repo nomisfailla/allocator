@@ -5,6 +5,7 @@
 #include <stdio.h> // For size_t
 
 #define ALLOC_SIG 0xA110CA1E
+#define ALLOC_INV 0xD0D0D0D0
 
 typedef struct
 {

@@ -109,29 +109,28 @@ void my_free(void* ptr)
     state.used_total -= block->size + sizeof(alloc_header_t);
     state.used -= block->size;
 
-    // March fowards and eat all free blocks that come after this one.
-    void* current = ptr + block->size;
-    size_t extra_size = 0;
-    while(heap_is_block_free(current))
+    // Check to see if the next block is free, if it is. Consume it.
+    alloc_header_t* next = (alloc_header_t*)(ptr + block->size);
+    if(heap_is_block_free(next))
     {
-        alloc_header_t* next = (alloc_header_t*)current;
-        size_t total_size = (next->size + sizeof(alloc_header_t));
-        extra_size += total_size;
-        current += total_size;
-    }
+        // Invalidate the signature so we dont ?somehow? come across it
+        // again.
+        next->sig = ALLOC_INV;
 
-    // Forfeit the empty blocks to this newly freed block.
-    block->size += extra_size;
+        size_t total_size = (next->size + sizeof(alloc_header_t));
+        block->size += total_size;
+    }
 
     // TODO: March backwards here.
 
     // Make sure that the block after this one actually points to this block
     // as it may not if we consumed some free blocks.
-    alloc_header_t* next = (alloc_header_t*)(ptr + block->size);
+    next = (alloc_header_t*)(ptr + block->size);
     if(next->sig == ALLOC_SIG)
     {
         next->prev = ptr - sizeof(alloc_header_t);
     }
+
 }
 
 int count_blocks()
